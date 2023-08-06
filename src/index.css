@@ -5,9 +5,27 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-color: gray;
 }
 
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.progressBarInner {
+  animation: aninamte-bar linear forwards;
+  animation-play-state: paused;
+}
+@keyframes aninamte-bar {
+  from {
+    width: 0%;
+  }
+  to {
+    width: 100%;
+  }
 }
