@@ -1,6 +1,6 @@
 import logo from "./logo.svg";
 import "./App.css";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 function App() {
   const [isLoading, setIsLoading] = useState(true);
@@ -8,6 +8,19 @@ function App() {
   const [currentTime, setCurrentTime] = useState(0);
   const [videoDuration, setVideoDuration] = useState(0);
   const videoRef = useRef(null);
+  const videoWrapperRef = useRef(null);
+  const [isFullScreen, setIsFullScreen] = useState(false);
+
+  useEffect(() => {
+    document.addEventListener("fullscreenchange", () => {
+      if (document.fullscreenElement) {
+        setIsFullScreen(true);
+      } else {
+        setIsFullScreen(false);
+      }
+    });
+  }, []);
+
   const playVideo = () => {
     isPlaying ? videoRef.current.pause() : videoRef.current.play();
     setIsplaying((currentPlayStatus) => !currentPlayStatus);
@@ -27,8 +40,22 @@ function App() {
     return formattedTime;
   };
 
+  const [jumpTime, setJumpTime] = useState(0);
+  const jump_time_factor = 5;
+  const handleSkipForward = () => {
+    if (
+      videoRef.current?.duration - videoRef.current.currentTime >
+      jump_time_factor
+    ) {
+      setJumpTime((currentJumpTime) => currentJumpTime + jump_time_factor);
+      videoRef.current.currentTime = Math.floor(
+        videoRef.current.currentTime + jump_time_factor
+      );
+    }
+  };
+
   return (
-    <div className="App relative ">
+    <div className="App relative " ref={videoWrapperRef}>
       <video
         className="w-full mx-auto my-8 "
         ref={videoRef}
@@ -51,26 +78,48 @@ function App() {
           <div
             className={
               "bg-red-600 w-[0%] h-full " +
-              (currentTime !== videoDuration ? "progressBarInner" : "")
+              (videoRef.current?.ended ? "" : "progressBarInner")
             }
             style={{
-              animationPlayState: isPlaying ? "running" : "paused",
-              animationDuration: isLoading
+              animationPlayState:
+                isPlaying && !isLoading ? "running" : "paused",
+              animationDuration: videoRef.current?.ended
                 ? `0s`
-                : `${videoRef.current.duration}s`,
+                : `${Math.ceil(videoRef.current?.duration - jumpTime)}s`,
             }}
           ></div>
         </div>
 
         {/* video controls */}
         <div className="text-gray-500 flex justify-between items-center w-[98%] mx-auto pb-4">
-          {
-            currentTime !== videoDuration  ? <button onClick={playVideo}>{isPlaying ? "Pause" : "Play"}</button>
-            : <button onClick={playVideo}>Replay</button>
-          }
+          <div className="flex justify-start items-center gap-x-4">
+            {currentTime !== videoDuration ? (
+              <button onClick={playVideo}>
+                {isPlaying ? "Pause" : "Play"}
+              </button>
+            ) : (
+              <button onClick={playVideo}>Replay</button>
+            )}
+            <p className="cursor-pointer" onClick={() => handleSkipForward()}>
+              Skip 5 Sec
+            </p>
+          </div>
           {/* <button onClick={playVideo}>{isPlaying ? "Pause" : "Play"}</button> */}
           <p className="inline-block ">
             {formatTime(currentTime)} / {formatTime(videoDuration)}
+          </p>
+          <p
+            className="cursor-pointer"
+            onClick={() => {
+              if (isFullScreen) {
+                document.exitFullscreen();
+              } else {
+                videoWrapperRef.current.requestFullscreen();
+              }
+              setIsFullScreen((prevState) => !prevState);
+            }}
+          >
+            {isFullScreen ? "Exit Full Screen" : "Full Screen"}
           </p>
         </div>
       </div>
